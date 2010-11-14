@@ -24,14 +24,12 @@ The module provides a controller for the admin of comments that arn't market ham
 
 the addition to a controller to load comments would look like this:
 
-`if(isset($_POST['s'])) {
-                        $posted = Model_Comment::post('bot',
-                                $bot,$this->user,$_POST['text']);
-                        $view->bind('posted',$posted);
-                }
+	if(isset($_POST['s'])) {
+		$posted = Model_Comment::post('bot',$bot,$this->user,$_POST['text']);
+		$view->bind('posted',$posted);
+	}
 
-                $comments =  Model_Comment::fetch('bot',$bot,$this->request->param('page',1));
+	$comments =  Model_Comment::fetch('bot',$bot,$this->request->param('page',1));
 
-                $this->request->response = $view
-                        ->bind('comments',$comments);
-`
+       	$this->request->response = $view
+		->bind('comments',$comments);
