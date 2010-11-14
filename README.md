@@ -11,10 +11,10 @@ I was looking for a quick to use comments module for kohana, so that I could att
 
 Requirements
 -------------
-kohana 3 - https://github.com/kohana/core
-database module - https://github.com/kohana/database
-orm module - https://github.com/kohana/orm
-B8 module - https://github.com/stensi/Kohana-B8
+* kohana 3 - https://github.com/kohana/core
+* database module - https://github.com/kohana/database
+* orm module - https://github.com/kohana/orm
+* B8 module - https://github.com/stensi/Kohana-B8
 
 
 Running
@@ -31,5 +31,5 @@ the addition to a controller to load comments would look like this:
 
 	$comments =  Model_Comment::fetch('bot',$bot,$this->request->param('page',1));
 
-       	$this->request->response = $view
+	$this->request->response = $view
 		->bind('comments',$comments);
