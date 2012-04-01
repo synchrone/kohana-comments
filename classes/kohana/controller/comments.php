@@ -8,7 +8,10 @@
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Controller_Comments_Core extends Controller {
+class Kohana_Controller_Comments extends Controller {
+    /** @var Model_User */
+    protected $user;
+
 	public function before() {
 		parent::before();
 
@@ -22,49 +25,33 @@ class Controller_Comments_Core extends Controller {
 				return;
 			}
 		}
-
-		$this->request->redirect('');
+		$this->request->redirect('/');
 	}
 
 	public function action_index($page = 1) {
 		$comments = Model_Comment::fetch(false,false,$page,'queued');
 
-		$this->request->response = View::factory('comments/index')
+		$this->response->body(View::factory('comments/index')
 			->bind('comments',$comments)
-			;
+        );
 	}
 
 	public function action_mark_as() {
-		$id = $_POST['comment_id'];
-		$comment = ORM::factory('comment',$_POST['comment_id']);
-		if(!$comment->loaded()) {
+        /** @var $comment Model_Comment */
+		$comment = ORM::factory('comment',(int)$_POST['comment_id']);
+
+		if(!$comment->loaded())
+        {
 			echo 'not a comment';
 			return;
 		}
 
-		$mark_as = $_POST['mark_as'];
+        $comment->mark($_POST['mark_as']);
+        $comment->save();
 
-		switch($mark_as) {
-			case 'ham':
-				$comment->mark_as_ham();
-				$comment->save();
-				break;
-			case 'spam':
-				$comment->mark_as_spam();
-				$comment->save();
-				break;
-			case 'deleted':
-				$comment->mark_as_deleted();
-				$comment->save();
-				break;
-		}
-
-		$template = 'comments/comment';
-		if(isset($_POST['local_template'])) {
-			$template = 'common/comment';
-		}
-		$this->request->response = View::factory($template)
+		$this->response->body(View::factory('comments/comment')
 			->bind('comment',$comment)
-			->set('admin',true);
+			->set('admin',true)
+        );
 	}
 }

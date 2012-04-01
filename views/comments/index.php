@@ -1,7 +1,3 @@
-<?php
-echo View::factory('common/header')
-        ->set('title','Comments Admin');
-?>
 <h2>Comments Admin</h2>
 <?php
 foreach($comments->comments as $comment) {
@@ -16,11 +12,4 @@ foreach($comments->comments as $comment) {
 	));
 
 	echo $pagination->render();
-?>
-<?php
-echo View::factory('common/footer')
-	->set('scripts',array(
-		'http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js',
-		'scripts/comments.js'
-	));
 //echo View::factory('profiler/stats');

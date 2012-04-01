@@ -8,7 +8,7 @@ return array(
 		'lower_limit'	=> 0.2,
 		'upper_limit'	=> 0.9,
 		'order'		=> 'DESC',
-		'public_states'	=> array('ham'),
+		'public_states'	=> array('ham','queued'),
 	),
 );
 
