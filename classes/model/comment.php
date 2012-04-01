@@ -8,7 +8,7 @@
  * @copyright   (c) 2010 Kyle Treubig
  * @license     MIT
  */
-class Model_Comment extends ORM {
+class Model_Comment extends ORM_MPTT {
 	protected $_belongs_to = array(
 		'comment_type' => array(),
 		'user' => array(),
@@ -19,17 +19,17 @@ class Model_Comment extends ORM {
 	protected $B8;
 
 
-	public static function post($type_name,$parent_id,$user,$text) {
+	public static function post($type_name,$scope,$user,$text) {
 		$comment = new Model_Comment();
-		return $comment->_post($type_name,$parent_id,$user,$text);
+		return $comment->_post($type_name,$scope,$user,$text);
 	}
 
-	public static function fetch($type_name,$parent_id,$page = 1,$states = false) {
+	public static function fetch($type_name,$scope,$page = 1,$states = false) {
 		$comment = new Model_Comment();
-		return $comment->_fetch($type_name,$parent_id,$page,$states);
+		return $comment->_fetch($type_name,$scope,$page,$states);
 	}
 
-	private function _fetch($type_name,$parent_id,$page,$states) {
+	private function _fetch($type_name,$scope,$page,$states) {
 		$states = $this->getPublicStates($states);
 		$offset = ($page - 1) * $this->config['per_page'];
 
@@ -40,7 +40,7 @@ class Model_Comment extends ORM {
 		else {
 			$query = $this->getType($type_name)
 				->comments
-				->where('parent_id','=',$parent_id);
+				->where('scope','=',$scope);
 		}
 
 		$result = new stdClass();
@@ -78,11 +78,11 @@ class Model_Comment extends ORM {
 		$this->config = Kohana::config('comments.default');
 	}
 
-	private function _post($type_name,$parent_id,$user,$text) {
+	private function _post($type_name,$scope,$user,$text) {
 		$type = $this->getType($type_name);
 
 		$this->comment_type_id = $type;
-		$this->parent_id = $parent_id;
+		$this->scope = $scope;
 		$this->user_id = $user;
 		$this->date = time();
 		$this->text = $text;
@@ -160,5 +160,4 @@ class Model_Comment extends ORM {
 		}
 		return $type;
 	}
-
 }
