@@ -38,21 +38,15 @@ class Kohana_Controller_Comments extends Controller {
 
 	public function action_mark_as() {
         /** @var $comment Model_Comment */
-		$comment = ORM::factory('comment',(int)$_POST['comment_id']);
+		$comment = ORM::factory('comment',(int)$_GET['comment_id']);
 
-		if(!$comment->loaded())
+		if($comment->loaded())
         {
-			echo 'not a comment';
-			return;
+            $comment->mark($_GET['mark']);
+            $comment->save();
 		}
 
-        $comment->mark($_POST['mark_as']);
-        $comment->save();
-
-		$this->response->body(View::factory('comments/comment')
-			->bind('comment',$comment)
-			->set('admin',true)
-        );
+		$this->request->redirect($this->request->referrer());
 	}
 
     public function action_post(){
