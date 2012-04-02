@@ -28,8 +28,8 @@ class Kohana_Controller_Comments extends Controller {
 		$this->request->redirect('/');
 	}
 
-	public function action_index($page = 1) {
-		$comments = Model_Comment::fetch(false,false,$page,'queued');
+	public function action_index() {
+		$comments = Model_Comment::fetch(false,false,1,'queued');
 
 		$this->response->body(View::factory('comments/index')
 			->bind('comments',$comments)
@@ -54,4 +54,8 @@ class Kohana_Controller_Comments extends Controller {
 			->set('admin',true)
         );
 	}
+
+    public function action_post(){
+
+    }
 }

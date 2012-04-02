@@ -4,15 +4,16 @@
  * Comment controller
  *
  * @package     Comments
- * @author      Kyle Treubig
- * @copyright   (c) 2010 Kyle Treubig
- * @license     MIT
+ *
+ * @property    $id
  * @property 	$comment_type_id
  * @property 	$state
  * @property 	$probability
  * @property 	$date
  * @property 	$user_id
  * @property 	$text
+ * @property    Model_Comment_Type $comment_type
+ * @property    Model_User         $user
  */
 class Kohana_Model_Comment extends ORM_MPTT {
 
@@ -21,7 +22,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
     const HAM       = 'ham';
     const SPAM      = 'spam';
 
-	protected $_belongs_to = array(
+    protected $_belongs_to = array(
 		'comment_type' => array(),
 		'user' => array(),
 	);
@@ -33,11 +34,31 @@ class Kohana_Model_Comment extends ORM_MPTT {
     /** @var $B8 B8 */
 	protected $B8;
 
+    public static function factory($model='comment',$id=array()){
+        // Set class name
+        $model = 'Model_'.ucfirst($model);
+
+        /** @var $model Model_Comment */
+        $model = new $model();
+
+        if(isset($id['state'])){
+            $model->where('state', 'IN', self::getPublicStates($id['state']));
+            unset($id['state']);
+        }
+
+        foreach ($id as $column => $value)
+        {
+            // Passing an array of column => values
+            $model->where($column, '=', $value);
+        }
+        return $model;
+    }
+
     /**
      * @param $type_name
      * @return Model_Comment_Type
      */
-	protected static function getTypes($type_name) {
+	protected static function getType($type_name) {
         /** @var $type Model_Comment_Type */
 		$type = ORM::factory('comment_type')
 			->where('type','=',$type_name)
@@ -51,7 +72,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
 
     protected static function getPublicStates($states = false) {
         if($states === false) {
-            $states = $this->config['public_states'];
+            $states = Kohana::$config->load('comments.default.public_states');
         }
         if(!is_array($states)) {
             $states = array($states);
@@ -60,74 +81,90 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $states;
     }
 
+    protected static function getRootComment($type_name=null,$scope = 1){
+        $model = self::factory();
+        return $model->where($model->left_column,'=',1)
+            ->where('comment_type_id','=', self::getType($type_name)->id)
+            ->where($model->scope_column, '=', $scope)
+            ->find();
+    }
 
-	public static function post($type_name,$scope,$user,$text) {
-		$comment = new Model_Comment();
-		return $comment->_post($type_name,$scope,$user,$text);
+    /**
+     * @static
+     * @param $type_name
+     * @param $scope
+     * @param Model_User $user
+     * @param $text
+     * @param $parent_id
+     * @return bool
+     */
+	public static function post($type_name,$scope,$user,$text,$parent_id = null) {
+        /** @var $parent_comment Model_Comment */
+        $parent_comment = self::factory('comment', array('id'=>$parent_id));
+
+        if(!$parent_comment->loaded()) //couldn't find parent comment
+        {
+            //so we take root (invisible comment), root of the tree
+            $parent_comment = Model_Comment::getRootComment($type_name,$scope);
+            if(!$parent_comment->loaded())
+            {
+                $parent_comment->comment_type_id = self::getType($type_name)->id;
+                $parent_comment->{$parent_comment->scope_column} = $scope;
+                $parent_comment->user_id = $user->id;
+                $parent_comment->text = '';
+                $parent_comment->save(); //we should always have the tree's root
+            }
+        }
+
+        $comment = self::factory();
+        $comment->comment_type_id = $parent_comment->comment_type_id;
+        $comment->{$comment->scope_column} = $parent_comment->{$comment->scope_column};
+        $comment->user_id = $user->id;
+        $comment->text = $text;
+        $comment->classify();
+        $comment->insert_as_last_child($parent_comment); //does the save() call
+
+        return $comment;
 	}
-    protected function _post($type_name,$scope,$user,$text) {
-   		$type = self::getTypes($type_name);
-
-        //as in 'what are we adding the comment for
-   		$this->comment_type_id = $type;
-        //as in that stuff's ID
-   		$this->scope = $scope;
-
-
-   		$this->user_id = $user;
-   		$this->date = time();
-   		$this->text = $text;
-
-   		$this->classify();
-
-   		$this->save();
-
-   		$states = $this->getPublicStates();
-   		return in_array($this->state,$states);
-   	}
 
 	public static function fetch($type_name,$scope,$page = 1,$states = false) {
-		$comment = new Model_Comment();
-		return $comment->_fetch($type_name,$scope,$page,$states);
-	}
-	protected function _fetch($type_name,$scope,$page,$states) {
-		$states = $this->getPublicStates($states);
-		$offset = ($page - 1) * $this->config['per_page'];
-
-		if($type_name === false) {
+        if($type_name === false) {
             /** @var $query Model_Comment */
-			$query = ORM::factory('comment')
-				->with('comment_type');
-		}
-		else {
+            $query = ORM::factory('comment')
+                ->with('comment_type');
+        }
+        else {
             /** @var $query Model_Comment */
-			$query = $this->getTypes($type_name)
-				->comments
-				->where('scope','=',$scope);
-		}
+            $query = self::getType($type_name)
+                ->comments
+                ->where('scope','=',$scope);
+        }
+        $query->with('user');
+        $query->where('parent_id','IS NOT',NULL);
 
-		$result = new stdClass();
+        $result = new stdClass();
+        $result->per_page = Kohana::$config->load('comments.default.per_page');
 
-		$result->per_page = $this->config['per_page'];
-		$result->total = $query
-			->where('state','IN',$states)
-			->with('user')
-			->reset(FALSE)
-			->count_all();
+        $query
+            ->offset(($page - 1) * $result->per_page)
+            ->limit($result->per_page)
+            ->order_by('date', Kohana::$config->load('comments.default.order'));
 
-		$result->comments = $query
-			->offset($offset)
-			->limit($this->config['per_page'])
-			->order_by('date', $this->config['order'])
-			->find_all();
+        $result->comments = $query->find_all()->as_array();
 
-		return $result;
-	}
+        $result->total = $query->count_all();
+        return $result;
+    }
 
-	public function __construct($id = NULL) {
-		parent::__construct($id);
-		$this->config = Kohana::$config->load('comments.default');
-	}
+    public static function fetch_tree($type_name,$scope,$states=false){
+        /** @var $query Model_Comment */
+        $query = self::getRootComment($type_name,$scope);
+        return $query
+            ->descendants() //had to override it, as it calls find_all by default
+            ->where('state','IN',self::getPublicStates($states))
+            ->find_all()
+        ;
+    }
 
 	protected function setB8() {
 		if(!isset($this->B8)) {
@@ -174,6 +211,58 @@ class Kohana_Model_Comment extends ORM_MPTT {
         }
         return $this;
 	}
+
+    /**
+     * Returns the descendants of the current node.
+     *
+     * @param bool   $self include the current node
+     * @param string $direction direction to order the left column by.
+     * @param bool   $direct_children_only include direct children only
+     * @param bool   $leaves_only include leaves only
+     * @param bool   $limit number of results to get
+     *
+     * @return  ORM_MPTT
+     */
+    public function descendants($self = FALSE, $direction = 'ASC', $direct_children_only = FALSE, $leaves_only = FALSE, $limit = FALSE)
+    {
+        $left_operator = $self ? '>=' : '>';
+        $right_operator = $self ? '<=' : '<';
+
+        $query = self::factory($this->object_name())
+            ->where($this->left_column, $left_operator, $this->left())
+            ->where($this->right_column, $right_operator, $this->right())
+            ->where($this->scope_column, '=', $this->scope())
+            ->order_by($this->left_column, $direction);
+
+        if ($direct_children_only)
+        {
+            if ($self)
+            {
+                $query
+                    ->and_where_open()
+                    ->where($this->level_column, '=', $this->level())
+                    ->or_where($this->level_column, '=', $this->level() + 1)
+                    ->and_where_close();
+            }
+            else
+            {
+                $query->where($this->level_column, '=', $this->level() + 1);
+            }
+        }
+
+        if ($leaves_only)
+        {
+            $query->where($this->right_column, '=', DB::expr($this->left_column.' + 1'));
+        }
+
+        if ($limit !== FALSE)
+        {
+            $query->limit($limit);
+        }
+
+        return $query;
+    }
+
 
 
 }

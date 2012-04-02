@@ -1,6 +1,7 @@
 <?php defined('SYSPATH') OR die('No direct script access.');
 
 /**
+ * @property int $id
  * @property string $type
  * @property Model_Comment $comments
  */

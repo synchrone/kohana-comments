@@ -12,7 +12,7 @@ CREATE TABLE "comments" (
     "scope" int4 NOT NULL,
 
     "user_id" int4 NOT NULL,
-    "date" int4 NOT NULL,
+    "date" int4 DEFAULT EXTRACT( EPOCH FROM NOW()) NOT NULL,
     "text" text NOT NULL,
 
     --B8

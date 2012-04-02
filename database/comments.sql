@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `comments` (
     `scope` int(11) NOT NULL,
 
 	`user_id` int(11) NOT NULL,
-	`date` int(10) NOT NULL,
+	`date` int(10) DEFAULT NOW() NOT NULL,
 	`text` text NOT NULL,
 
     --B8
