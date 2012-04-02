@@ -50,6 +50,17 @@ class Kohana_Controller_Comments extends Controller {
 	}
 
     public function action_post(){
-
+            $comment = Model_Comment::post(
+            Arr::get($_GET,'type',null),
+            Arr::get($_GET,'scope',null),
+            Auth::instance()->get_user(),
+            Arr::get($_GET,'text',''),
+            Arr::get($_GET,'parent_id',null)
+        );
+        if(in_array($comment->state, Model_Comment::getPublicStates())){
+            echo 'posted ok';
+        }else{
+            echo 'seems like spam';
+        }
     }
 }

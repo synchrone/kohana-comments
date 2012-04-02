@@ -5,13 +5,13 @@
  *
  * @package     Comments
  *
- * @property    $id
- * @property 	$comment_type_id
- * @property 	$state
- * @property 	$probability
- * @property 	$date
- * @property 	$user_id
- * @property 	$text
+ * @property    int $id
+ * @property 	int $comment_type_id
+ * @property 	string $state
+ * @property 	float $probability
+ * @property 	int $date
+ * @property 	int $user_id
+ * @property 	string $text
  * @property    Model_Comment_Type $comment_type
  * @property    Model_User         $user
  */
@@ -70,7 +70,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
 		return $type;
 	}
 
-    protected static function getPublicStates($states = false) {
+    public static function getPublicStates($states = false) {
         if($states === false) {
             $states = Kohana::$config->load('comments.default.public_states');
         }
@@ -96,11 +96,11 @@ class Kohana_Model_Comment extends ORM_MPTT {
      * @param Model_User $user
      * @param $text
      * @param $parent_id
-     * @return bool
+     * @return Model_Comment
      */
 	public static function post($type_name,$scope,$user,$text,$parent_id = null) {
         /** @var $parent_comment Model_Comment */
-        $parent_comment = self::factory('comment', array('id'=>$parent_id));
+        $parent_comment = self::factory('comment', array('id'=>$parent_id))->find();
 
         if(!$parent_comment->loaded()) //couldn't find parent comment
         {
