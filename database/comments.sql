@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `comments` (
 	`lft` int(11) NOT NULL,
 	`rgt` int(11) NOT NULL,
 	`lvl` int(11) NOT NULL,
-	`parent_id` int(11) NOT NULL,
+	`parent_id` int(11),
     -- MPTT-End
 
     `scope` int(11) NOT NULL,

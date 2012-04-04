@@ -6,7 +6,7 @@ CREATE TABLE "comments" (
     "lft" int4 NOT NULL,
     "rgt" int4 NOT NULL,
     "lvl" int2 NOT NULL,
-    "parent_id" int4 NOT NULL,
+    "parent_id" int4,
     -- MPTT-End
 
     "scope" int4 NOT NULL,
