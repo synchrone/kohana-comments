@@ -109,10 +109,9 @@ class Kohana_Model_Comment extends ORM_MPTT {
             if(!$parent_comment->loaded())
             {
                 $parent_comment->comment_type_id = self::getType($type_name)->id;
-                $parent_comment->{$parent_comment->scope_column} = $scope;
                 $parent_comment->user_id = $user->id;
                 $parent_comment->text = '';
-                $parent_comment->save(); //we should always have the tree's root
+                $parent_comment->make_root(null,$scope); //we should always have the tree's root
             }
         }
 
