@@ -98,7 +98,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
      * @param $parent_id
      * @return Model_Comment
      */
-	public static function post($type_name,$scope,$user,$text,$parent_id = null) {
+	public static function post($type_name,$scope,$user,$text,$date = null,$parent_id = null) {
         /** @var $parent_comment Model_Comment */
         $parent_comment = self::factory('comment', array('id'=>$parent_id))->find();
 
@@ -111,7 +111,9 @@ class Kohana_Model_Comment extends ORM_MPTT {
                 $parent_comment->comment_type_id = self::getType($type_name)->id;
                 $parent_comment->user_id = $user->id;
                 $parent_comment->text = '';
-                $parent_comment->make_root(null,$scope); //we should always have the tree's root
+                $parent_comment->date = $date !== null ? $date : time();
+                $parent_comment->save(); //we should always have the tree's root
+                $parent_comment->make_root(null,$scope); //fixing the scope back
             }
         }
 
@@ -120,6 +122,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
         $comment->{$comment->scope_column} = $parent_comment->{$comment->scope_column};
         $comment->user_id = $user->id;
         $comment->text = $text;
+        $comment->date = $date !== null ? $date : time();
         $comment->classify();
         $comment->insert_as_last_child($parent_comment); //does the save() call
 
