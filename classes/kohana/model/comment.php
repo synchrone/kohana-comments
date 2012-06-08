@@ -141,8 +141,10 @@ class Kohana_Model_Comment extends ORM_MPTT {
                 ->comments
                 ->where('scope','=',$scope);
         }
-        $query->with('user');
-        $query->where('parent_id','IS NOT',NULL);
+        $query
+            ->with('user')
+            ->where('parent_id','IS NOT',NULL)
+            ->where('state','IN',self::getPublicStates($states));
 
         $result = new stdClass();
         $result->per_page = Kohana::$config->load('comments.default.per_page');
