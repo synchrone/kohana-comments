@@ -112,19 +112,22 @@ class Kohana_Model_Comment extends ORM_MPTT {
                 $parent_comment->user_id = $user->id;
                 $parent_comment->text = '';
                 $parent_comment->date = $date !== null ? $date : time();
+                $parent_comment->{$parent_comment->scope_column} = $scope;
+                $parent_comment->{$parent_comment->level_column} = 1;
+                $parent_comment->{$parent_comment->left_column} = 1;
+                $parent_comment->{$parent_comment->right_column} = 2;
+                $parent_comment->{$parent_comment->parent_column} = NULL;
                 $parent_comment->save(); //we should always have the tree's root
-                $parent_comment->make_root(null,$scope); //fixing the scope back
             }
         }
 
         $comment = self::factory();
         $comment->comment_type_id = $parent_comment->comment_type_id;
-        $comment->{$comment->scope_column} = $parent_comment->{$comment->scope_column};
         $comment->user_id = $user->id;
         $comment->text = $text;
         $comment->date = $date !== null ? $date : time();
         $comment->classify();
-        $comment->insert_as_last_child($parent_comment); //does the save() call
+        $comment->insert_as_last_child($parent_comment); //does the save() call. Scope is taken from $target
 
         return $comment;
 	}
@@ -267,6 +270,8 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $query;
     }
 
-
+    public function save($validation=null){
+        return $this->loaded() ? $this->update($validation) : $this->create($validation);
+    }
 
 }
