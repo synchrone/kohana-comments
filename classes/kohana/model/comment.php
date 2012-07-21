@@ -173,7 +173,16 @@ class Kohana_Model_Comment extends ORM_MPTT {
         ;
     }
 
-	protected function setB8() {
+
+    public function rules(){
+        return array(
+            'text' => array(
+                array('not_empty')
+            )
+        );
+    }
+
+    protected function setB8() {
 		if(!isset($this->B8)) {
             $this->B8 = B8::factory();
 		}
