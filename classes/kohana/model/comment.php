@@ -279,7 +279,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $query;
     }
 
-    public function save($validation=null){
+    public function save(Validation $validation = NULL){
         return $this->loaded() ? $this->update($validation) : $this->create($validation);
     }
 
