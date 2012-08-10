@@ -110,7 +110,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
             {
                 $parent_comment->comment_type_id = self::getType($type_name)->id;
                 $parent_comment->user_id = $user->id;
-                $parent_comment->text = '';
+                $parent_comment->text = '<root/>';
                 $parent_comment->date = $date !== null ? $date : time();
                 $parent_comment->{$parent_comment->scope_column} = $scope;
                 $parent_comment->{$parent_comment->level_column} = 1;
