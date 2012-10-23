@@ -132,7 +132,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $comment;
 	}
 
-	public static function fetch($type_name,$scope,$page = 1,$states = false) {
+	public static function fetch($type_name, $scope = false, $page = 1, $per_page = false, $states = false) {
         if($type_name === false) {
             /** @var $query Model_Comment */
             $query = ORM::factory('comment')
@@ -140,9 +140,10 @@ class Kohana_Model_Comment extends ORM_MPTT {
         }
         else {
             /** @var $query Model_Comment */
-            $query = self::getType($type_name)
-                ->comments
-                ->where('scope','=',$scope);
+            $query = self::getType($type_name)->comments;
+        }
+        if($scope != false){
+            $query->where('scope','=',$scope);
         }
         $query
             ->with('user')
@@ -150,7 +151,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
             ->where('state','IN',self::getPublicStates($states));
 
         $result = new stdClass();
-        $result->per_page = Kohana::$config->load('comments.default.per_page');
+        $result->per_page = $per_page ? $per_page : Kohana::$config->load('comments.default.per_page');
 
         $query
             ->offset(($page - 1) * $result->per_page)
