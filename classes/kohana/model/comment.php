@@ -132,8 +132,8 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $comment;
 	}
 
-	public static function fetch($type_name, $scope = false, $page = 1, $per_page = false, $states = false) {
-        if($type_name === false) {
+	public static function fetch($type_name = null, $scope = null, $page = 1, $per_page = null, $states = null, $user_id = null) {
+        if($type_name === null) {
             /** @var $query Model_Comment */
             $query = ORM::factory('comment')
                 ->with('comment_type');
@@ -142,11 +142,16 @@ class Kohana_Model_Comment extends ORM_MPTT {
             /** @var $query Model_Comment */
             $query = self::getType($type_name)->comments;
         }
-        if($scope != false){
+        $query->with('user');
+
+        if($scope){
             $query->where('scope','=',$scope);
         }
+        if($user_id){
+            $query->where('user_id','=',$user_id);
+        }
+
         $query
-            ->with('user')
             ->where('parent_id','IS NOT',NULL)
             ->where('state','IN',self::getPublicStates($states));
 
