@@ -175,7 +175,6 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $query
             ->descendants() //had to override it, as it calls find_all by default
             ->where('state','IN',self::getPublicStates($states))
-            ->find_all()
         ;
     }
 
