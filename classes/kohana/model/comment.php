@@ -169,6 +169,12 @@ class Kohana_Model_Comment extends ORM_MPTT {
         return $result;
     }
 
+    /**
+     * @param $type_name
+     * @param $scope
+     * @param array|bool $states
+     * @return $this
+     */
     public static function fetch_tree($type_name,$scope,$states=false){
         /** @var $query Model_Comment */
         $query = self::getRootComment($type_name,$scope);
