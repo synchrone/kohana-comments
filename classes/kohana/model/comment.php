@@ -184,6 +184,13 @@ class Kohana_Model_Comment extends ORM_MPTT {
         ;
     }
 
+    public function delete_by_scope($scope)
+    {
+        return DB::delete($this->table_name())
+            ->where($this->scope_column,'=',$scope)
+            ->execute();
+    }
+
 
     public function rules(){
         return array(
