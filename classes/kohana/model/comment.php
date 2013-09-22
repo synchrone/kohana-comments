@@ -34,24 +34,26 @@ class Kohana_Model_Comment extends ORM_MPTT {
     /** @var $B8 B8 */
 	protected $B8;
 
-    public static function factory($model='comment',$id=array()){
-        // Set class name
-        $model = 'Model_'.ucfirst($model);
+    /**
+     * @param string $model
+     * @param null $id
+     * @return self
+     */
+    public static function factory($model='comment',$id = null)
+    {
+        return parent::factory($model,$id);
+    }
 
-        /** @var $model Model_Comment */
-        $model = new $model();
-
-        if(isset($id['state'])){
-            $model->where('state', 'IN', self::getPublicStates($id['state']));
-            unset($id['state']);
-        }
-
-        foreach ($id as $column => $value)
+    public function __construct($id = NULL)
+    {
+        if(is_array($id) && isset($id['state']))
         {
-            // Passing an array of column => values
-            $model->where($column, '=', $value);
+            $states = self::getPublicStates($id['state']);
+            unset($id['state']);
+
+            $this->where('state', 'IN', $states);
         }
-        return $model;
+        parent::__construct($id);
     }
 
     /**
@@ -100,7 +102,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
      */
 	public static function post($type_name,$scope,$user,$text,$date = null,$parent_id = null) {
         /** @var $parent_comment Model_Comment */
-        $parent_comment = self::factory('comment', array('id'=>$parent_id))->find();
+        $parent_comment = self::factory('comment', array('id'=>$parent_id));
 
         if(!$parent_comment->loaded()) //couldn't find parent comment
         {
@@ -112,12 +114,7 @@ class Kohana_Model_Comment extends ORM_MPTT {
                 $parent_comment->user_id = $user->id;
                 $parent_comment->text = '<root/>';
                 $parent_comment->date = $date !== null ? $date : time();
-                $parent_comment->{$parent_comment->scope_column} = $scope;
-                $parent_comment->{$parent_comment->level_column} = 1;
-                $parent_comment->{$parent_comment->left_column} = 1;
-                $parent_comment->{$parent_comment->right_column} = 2;
-                $parent_comment->{$parent_comment->parent_column} = NULL;
-                $parent_comment->save(); //we should always have the tree's root
+                $parent_comment->make_root(null,$scope); //we should always have the tree's root
             }
         }
 
